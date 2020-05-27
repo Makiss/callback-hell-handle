@@ -21,7 +21,9 @@ module.exports = function (fileToRead, fileToWrite, callback) {
     .then(() => fsPromisified.open(fileToWrite, 'w'))
     .catch((err) => {
       if (err.code === 'ENOENT') {
-        return fsPromisified.mkdir(path.dirname(fileToWrite));
+        return fsPromisified.mkdir(path.dirname(fileToWrite), {
+          recursive: true,
+        });
       }
     })
     .then(() =>

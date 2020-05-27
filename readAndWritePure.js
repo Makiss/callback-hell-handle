@@ -25,6 +25,7 @@ const onWritableFileOpen = function (fileToRead, fileToWrite, callback, err) {
     if (err.code === 'ENOENT') {
       return fs.mkdir(
         path.dirname(fileToWrite),
+        { recursive: true },
         onMkdir.bind(null, rs, fileToWrite, callback)
       );
     }
@@ -43,8 +44,6 @@ const streamFromReadToWrite = function (rs, ws, callback) {
 };
 
 const copyFile = function (fileToRead, fileToWrite, callback) {
-  console.log(`Reading from ${fileToRead}`);
-
   fs.open(
     fileToWrite,
     'w',

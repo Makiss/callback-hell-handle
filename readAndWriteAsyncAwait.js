@@ -19,7 +19,7 @@ const copyFile = async function (fileToRead, fileToWrite) {
 };
 
 const mkdir = async function (pathToFile) {
-  await fsPromisified.mkdir(path.dirname(pathToFile));
+  await fsPromisified.mkdir(path.dirname(pathToFile), { recursive: true });
 };
 
 const openReadFile = async function (fileToRead, callback) {

@@ -2,22 +2,21 @@ const fs = require('fs');
 const path = require('path');
 const fsPromisified = fs.promises;
 
-const asyncFlowWithPromises = function (generator) {
-  function callback(...args) {
-    const result = generatorObj.next(args).value;
+const asyncFlowWithPromises = function (err, generator) {
+  const traverseGenerator = (yieldedObj) => {
+    const result = yieldedObj.value;
     if (result) {
-      result.then
-        ? result.then(callback).catch((err) => generatorObj.throw(err))
-        : asyncFlowWithPromises(result);
+      return result.then
+        ? result
+            .then(() => asyncFlowWithPromises(null, generatorObj))
+            .catch((err) => asyncFlowWithPromises(err, generatorObj))
+        : asyncFlowWithPromises(null, result);
     }
-  }
+  };
+
   const generatorObj = typeof generator === 'object' ? generator : generator();
-  const result = generatorObj.next().value;
-  if (result) {
-    result.then
-      ? result.then(callback).catch((err) => generatorObj.throw(err))
-      : asyncFlowWithPromises(result);
-  }
+
+  traverseGenerator(err ? generator.throw(err) : generatorObj.next());
 };
 
 const streamFromReadToWrite = function* (fileToRead, fileToWrite) {
@@ -37,7 +36,7 @@ const copyFile = function* (fileToRead, fileToWrite) {
 };
 
 const mkdir = function* (pathToFile) {
-  yield fsPromisified.mkdir(path.dirname(pathToFile));
+  yield fsPromisified.mkdir(path.dirname(pathToFile), { recursive: true });
 };
 
 const openReadFile = function* (fileToRead, callback) {
@@ -60,6 +59,7 @@ const openWriteFile = function* (fileToWrite) {
 
 module.exports = function (fileToRead, fileToWrite, callback) {
   return asyncFlowWithPromises(
+    null,
     function* (fileToRead, fileToWrite, callback) {
       try {
         yield* openReadFile(fileToRead, callback);
